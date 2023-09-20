@@ -15,26 +15,85 @@ KILO = 1000
 TONNE = 1000
 WATT = 1
 
-# MASSE = 180 * TONNE # Regiolis 4 caisses
-MASSE = 275 * TONNE # Regiolis 6 caisses
+vehicules = {
+        "citadis": {
+            "nom": "Alstom Citadis",
+            "masse": 75 * TONNE,
+            "puissance": 0.7 * 960 * KILO * WATT,
+            "puissance f": -1500 * KILO * WATT,
+            "surface": 2.5 * 3,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "citadis+": {
+            "nom": "Alstom Citadis plus pouissant",
+            "masse": 75 * TONNE,
+            "puissance": 0.7 * 1500 * KILO * WATT,
+            "puissance f": -2000 * KILO * WATT,
+            "surface": 2.5 * 3,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "regiolis4r": {
+            "nom": "Regiolis 4 caisses « régional »",
+            "masse": 145.6 * TONNE,
+            "puissance": 0.692 * 1800 * KILO * WATT,
+            "puissance f": -3500 * KILO * WATT,
+            "surface": 2.85 * 4.29,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "regiolis6r": {
+            "nom": "Regiolis 6 caisses « régional »",
+            "masse": 244.6 * TONNE,
+            "puissance": 0.655 * 2700 * KILO * WATT,
+            "puissance f": -3500 * KILO * WATT,
+            "surface": 2.85 * 4.29,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "regio2nTETnormandie": {
+            "nom": "Regio2N « TET Normandie »",
+            "masse": 363.4 * TONNE,
+            "puissance": 0.5 * 3200 * KILO * WATT,
+            "puissance f": -4000 * KILO * WATT,
+            "surface": 3.05 * 4.32,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "fretBB26000": {
+            "nom": "Fret 2000 t BB 26000",
+            "masse": 2050 * TONNE,
+            "puissance": 0.95 * 5600 * KILO * WATT,
+            "puissance f": -5000 * KILO * WATT,
+            "surface": 2.93 * 4.27,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "fretBB27000": {
+            "nom": "Fret 2000 t BB 27000",
+            "masse": 2050 * TONNE,
+            "puissance": 0.7 * 4200 * KILO * WATT,
+            "puissance f": -5000 * KILO * WATT,
+            "surface": 2.93 * 4.27,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        }
 
-# PUISSANCE = 0.692 * 1800 * KILO * WATT # Regiolis 4 caisses
-PUISSANCE = 0.655 * 2700 * KILO * WATT # Regiolis 6 caisses
+vehicule = vehicules["fretBB26000"]
 
-# PUISSANCE_FREINAGE = -3500 * KILO * WATT # Regiolis 4 caisses
-PUISSANCE_FREINAGE = -5000 * KILO * WATT # Regiolis 6 caisses
 
 RHO = 1.2
-S = 13
-CX = 0.6
-ALPHA = 0.5 * RHO * S * CX # 1/2 rho S Cx Regiolis
 
-CRR = 0.003
+ALPHA = 0.5 * RHO * vehicule["surface"] * vehicule["cx"]
 
-VITESSE_CIBLE = 160/3.6
+VITESSE_INI = 1e-3/3.6
+VITESSE_CIBLE = 100/3.6
 ECART = 1/3.6
+PENTE = 8/1000
 
-DATA = pd.read_csv("data.csv", sep=";", header=0, decimal=",")
+DATA = pd.read_csv("profil autoroute La Roche Annecy.csv", sep=";", header=0, decimal=",")
 
 def get_index(pk):
     """
@@ -120,7 +179,7 @@ def resistance(vitesse, pente):
     vitesse : float
         Vitesse en m/s.
     pente : float
-        pente en mm/m.
+        pente en m/m.
 
     Returns
     -------
@@ -130,8 +189,8 @@ def resistance(vitesse, pente):
     """
     v = vitesse
     R_aero = ALPHA * v ** 2
-    R_elevation = pente * MASSE * 9.81 # m * g * v verticale / v
-    R_roulement = CRR * MASSE * 9.81
+    R_elevation = pente * vehicule["masse"] * 9.81 # m * g * v verticale / v
+    R_roulement = vehicule["crr"] * vehicule["masse"] * 9.81
     
     return R_aero + R_elevation + R_roulement
 
@@ -165,64 +224,72 @@ def force_traction(vitesse, vitesse_cible = VITESSE_CIBLE):
     """
     vitesse = abs(vitesse)
     if vitesse <= vitesse_cible - ECART:
-        p = PUISSANCE
+        p = vehicule["puissance"]
     elif vitesse <= vitesse_cible:
         #p = PUISSANCE * sin(pi / 2 * (vitesse - VITESSE_CIBLE) / ECART - pi)
-        p = (vitesse_cible - vitesse) * PUISSANCE / ECART
+        p = (vitesse_cible - vitesse) * vehicule["puissance"] / ECART
     elif vitesse < vitesse_cible + ECART:
         #p = PUISSANCE_FREINAGE * sin(pi / 2 * (vitesse - VITESSE_CIBLE) / ECART)
-         p = (vitesse - vitesse_cible) * PUISSANCE_FREINAGE / ECART
+         p = (vitesse - vitesse_cible) * vehicule["puissance f"] / ECART
     else:
-        p = PUISSANCE_FREINAGE
+        p = vehicule["puissance f"]
     return p / vitesse
 
-def f_integree_plat(t, y, v_cible):
-    return [force_traction(y[0], v_cible) / MASSE - resistance(y[0], 0) / MASSE, y[0]]
+def f_integree_pente(t, y, v_cible, pente):
+    return [force_traction(y[0], v_cible) / vehicule["masse"] - resistance(y[0], pente) / vehicule["masse"], y[0]]
 
 def f_integree_croissant(t, y):
-    return [force_traction(y[0]) / MASSE - resistance_pk_croissant(y[0], y[1]) / MASSE, y[0]]
+    return [force_traction(y[0]) / vehicule["masse"] - resistance_pk_croissant(y[0], y[1]) / vehicule["masse"], y[0]]
 
 def f_integree_decroissant(t, y):
-    return [-force_traction(y[0]) / MASSE + resistance_pk_decroissant(y[0], y[1]) / MASSE, y[0]]
+    return [-force_traction(y[0]) / vehicule["masse"] + resistance_pk_decroissant(y[0], y[1]) / vehicule["masse"], y[0]]
 
 t0 = 0
-tmax = 300
-range_dist = np.linspace(0, 19000, 100)
+tmax = 360
 
+#for v in np.linspace(20, 100, 81):
+#    v_ini = v / 3.6
+#    v_cible = 1 / 3.6
+#    sol_frein = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
+#                    t_eval = np.linspace(t0, tmax, 200),
+#                    args = [v_cible, 0/1000],
+#                    events = lambda t, y, v_c, p : y[0] - 1.02 * v_c)
+#    
+#    print("{0:0.0f}".format(v_ini * 3.6),
+#          "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
+#          "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
+    
+#for v in np.linspace(20, 100, 81):
+#    v_ini = 1e-3
+#    v_cible = v / 3.6
+#    sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
+#                    t_eval = np.linspace(t0, tmax, 200),
+#                    args = [v_cible, 0/1000],
+#                    events = lambda t, y, v_c, p : y[0] - 0.98 * v_c)
+#    
+#    print("{0:0.0f}".format(v_cible * 3.6),
+#          "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
+#          "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
 
-# for v in np.linspace(50, 160, 111):
-#     v_ini = v / 3.6
-#     v_cible = 1 / 3.6
-#     sol_frein = solve_ivp(f_integree_plat, [t0, tmax], [v_ini, 0],
-#                     t_eval = np.linspace(t0, tmax, 200),
-#                     args = [v_cible],
-#                     events = lambda t, y, v_c : y[0] - 1.02 * v_c)
-    
-#     print(v_ini * 3.6, sol_frein.y_events[0][0][1], sol_frein.t_events[0][0])
-    
-for v in np.linspace(50, 160, 111):
-    v_ini = 1e-3
-    v_cible = v / 3.6
-    sol_acc = solve_ivp(f_integree_plat, [t0, tmax], [v_ini, 0],
-                    t_eval = np.linspace(t0, tmax, 200),
-                    args = [v_cible],
-                    events = lambda t, y, v_c : y[0] - 0.99 * v_c)
-    
-    print(v_cible * 3.6, sol_acc.y_events[0][0][1], sol_acc.t_events[0][0])
-    
+sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
+                t_eval = np.linspace(t0, tmax, 200),
+                args = [VITESSE_CIBLE, PENTE],
+                events = [lambda t, y, v_c, p : y[0] - 50/3.6])
 
-# sol = solve_ivp(f_integree_plat, [t0, tmax], [1e-3, 0],
-#                 t_eval = np.linspace(t0, tmax, 200),
-#                 args = [VITESSE_CIBLE])
+fig = plt.figure(0, dpi=80)
+plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
+ax = plt.gca()
+ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
+ax.set_xlabel("distance (km)")
+ax.set_ylabel("vitesse (km/h)")
+# plt.savefig(".png")
+plt.show()
 
-# fig = plt.figure(0, dpi=300)
-# plt.title("Vitesse du train (accélération à plat)")
-# ax = plt.gca()
-# ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
-# ax.set_xlabel("distance (km)")
-# ax.set_ylabel("vitesse (km/h)")
-# # plt.savefig(".png")
-# plt.show()
+#print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
+#print(sol.y_events[0][0][0] / sol.t_events[0][0])
+
+#range_dist = np.linspace(0, 19000, 100)    
+
 
 # sol = solve_ivp(f_integree_croissant, [t0, tmax], [0.01, 0],
 #                 t_eval = np.linspace(t0, tmax, 100))
