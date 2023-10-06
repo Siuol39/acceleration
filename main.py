@@ -81,7 +81,7 @@ vehicules = {
             },
         }
 
-vehicule = vehicules["fretBB26000"]
+vehicule = vehicules["citadis"]
 
 
 RHO = 1.2
@@ -247,19 +247,19 @@ def f_integree_decroissant(t, y):
 t0 = 0
 tmax = 360
 
-#for v in np.linspace(20, 100, 81):
-#    v_ini = v / 3.6
-#    v_cible = 1 / 3.6
-#    sol_frein = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
-#                    t_eval = np.linspace(t0, tmax, 200),
-#                    args = [v_cible, 0/1000],
-#                    events = lambda t, y, v_c, p : y[0] - 1.02 * v_c)
-#    
-#    print("{0:0.0f}".format(v_ini * 3.6),
-#          "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
-#          "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
+for v in np.linspace(20, 100, 81):
+    v_ini = v / 3.6
+    v_cible = 1 / 3.6
+    sol_frein = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
+                    t_eval = np.linspace(t0, tmax, 200),
+                    args = [v_cible, 0/1000],
+                    events = lambda t, y, v_c, p : y[0] - 1.02 * v_c)
     
-#for v in np.linspace(20, 100, 81):
+    print("{0:0.0f}".format(v_ini * 3.6),
+          "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
+          "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
+    
+#for v in np.linspace(20, 70, 51):
 #    v_ini = 1e-3
 #    v_cible = v / 3.6
 #    sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
@@ -271,19 +271,19 @@ tmax = 360
 #          "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
 #          "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
 
-sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
-                t_eval = np.linspace(t0, tmax, 200),
-                args = [VITESSE_CIBLE, PENTE],
-                events = [lambda t, y, v_c, p : y[0] - 50/3.6])
-
-fig = plt.figure(0, dpi=80)
-plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
-ax = plt.gca()
-ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
-ax.set_xlabel("distance (km)")
-ax.set_ylabel("vitesse (km/h)")
-# plt.savefig(".png")
-plt.show()
+#sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
+#                t_eval = np.linspace(t0, tmax, 200),
+#                args = [VITESSE_CIBLE, PENTE],
+#                events = [lambda t, y, v_c, p : y[0] - 50/3.6])
+#
+#fig = plt.figure(0, dpi=80)
+#plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
+#ax = plt.gca()
+#ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
+#ax.set_xlabel("distance (km)")
+#ax.set_ylabel("vitesse (km/h)")
+## plt.savefig(".png")
+#plt.show()
 
 #print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
 #print(sol.y_events[0][0][0] / sol.t_events[0][0])
