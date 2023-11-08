@@ -61,6 +61,24 @@ vehicules = {
             "cx": 0.6,
             "crr": 0.003
             },
+        "regio2n_8_3200": {
+            "nom": "Regio2N version L (8 caisses) 3200 kW",
+            "masse": 328 * TONNE,
+            "puissance": 0.7 * 3200 * KILO * WATT,
+            "puissance f": -4000 * KILO * WATT,
+            "surface": 3.05 * 4.32,
+            "cx": 0.6,
+            "crr": 0.003
+            },
+        "flirt_521_523_CFF": {
+            "nom": "Flirt 521-523 CFF",
+            "masse": 157 * TONNE,
+            "puissance": 0.7 * 2000 * KILO * WATT,
+            "puissance f": -3500 * KILO * WATT,
+            "surface": 2.88 * 4.15,
+            "cx": 0.6,
+            "crr": 0.003
+            },
         "fretBB26000": {
             "nom": "Fret 3000 t BB 26000",
             "masse": 3000 * TONNE,
@@ -81,19 +99,20 @@ vehicules = {
             },
         }
 
-vehicule = vehicules["fretBB26000"]
+vehicule = vehicules["flirt_521_523_CFF"]
 
 
 RHO = 1.2
 
 ALPHA = 0.5 * RHO * vehicule["surface"] * vehicule["cx"]
 
-VITESSE_INI = 1e-3/3.6
-VITESSE_CIBLE = 83/3.6
-ECART = 3/3.6
+VITESSE_INI = 160/3.6
+VITESSE_CIBLE = 160/3.6
+ECART = 1/3.6
 PENTE = 5.35/1000
 
-DATA = pd.read_csv("profil autoroute La Roche Annecy.csv", sep=";", header=0, decimal=",")
+# DATA = pd.read_csv("profil autoroute La Roche Annecy.csv", sep=";", header=0, decimal=",")
+DATA = pd.read_csv("A48 Bourgouin-Voreppe.csv", sep=";", header=0, decimal=",")
 
 def get_index(pk):
     """
@@ -271,31 +290,31 @@ tmax = 1200
 #           "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
 #           "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
 
-sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
-                t_eval = np.linspace(t0, tmax, 200),
-                args = [VITESSE_CIBLE, PENTE],
-                events = [lambda t, y, v_c, p : y[0] - 50/3.6])
+# sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
+#                 t_eval = np.linspace(t0, tmax, 200),
+#                 args = [VITESSE_CIBLE, PENTE],
+#                 events = [lambda t, y, v_c, p : y[0] - 50/3.6])
 
-fig = plt.figure(0, dpi=80)
-plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
-ax = plt.gca()
-ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
-ax.set_xlabel("distance (km)")
-ax.set_ylabel("vitesse (km/h)")
-# plt.savefig(".png")
-plt.show()
+# fig = plt.figure(0, dpi=80)
+# plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
+# ax = plt.gca()
+# ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
+# ax.set_xlabel("distance (km)")
+# ax.set_ylabel("vitesse (km/h)")
+# # plt.savefig(".png")
+# plt.show()
 
-print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
-print(sol.y_events[0][0][0] / sol.t_events[0][0])
+# print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
+# print(sol.y_events[0][0][0] / sol.t_events[0][0])
 
-#range_dist = np.linspace(0, 19000, 100)    
+range_dist = np.linspace(0, 45000, 100)    
 
 
-# sol = solve_ivp(f_integree_croissant, [t0, tmax], [0.01, 0],
+# sol = solve_ivp(f_integree_croissant, [t0, tmax], [VITESSE_INI, 0],
 #                 t_eval = np.linspace(t0, tmax, 100))
     
 # fig = plt.figure(1, dpi=300)
-# plt.title("Vitesse du train (Annecy -> La Roche)")
+# plt.title("Vitesse du train (aller)")
 # ax1 = plt.gca()
 # ax2 = ax1.twinx()
 # ax1.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
@@ -306,20 +325,20 @@ print(sol.y_events[0][0][0] / sol.t_events[0][0])
 # plt.savefig("vitesse A-LR.png")
 # plt.show()
 
-# sol = solve_ivp(f_integree_decroissant, [t0, tmax], [-0.01, 19400],
-#                 t_eval = np.linspace(t0, tmax, 100))
+sol = solve_ivp(f_integree_decroissant, [t0, tmax], [-VITESSE_INI, 42030],
+                t_eval = np.linspace(t0, tmax, 100))
     
-# fig = plt.figure(2, dpi=300)
-# plt.title("Vitesse du train (La Roche -> Annecy)")
-# ax1 = plt.gca()
-# ax2 = ax1.twinx()
-# ax1.plot(sol.y[1] / 1000, -3.6 * sol.y[0])
-# ax2.plot(range_dist / 1000, [altitude(pk) for pk in range_dist], 'r')
-# ax1.set_xlabel("distance (km)")
-# ax1.set_ylabel("vitesse (km/h)")
-# ax2.set_ylabel("altitude (m)")
-# plt.savefig("vitesse LR-A.png")
-# plt.show()
+fig = plt.figure(2, dpi=300)
+plt.title("Vitesse du train (retour)")
+ax1 = plt.gca()
+ax2 = ax1.twinx()
+ax1.plot(sol.y[1] / 1000, -3.6 * sol.y[0])
+ax2.plot(range_dist / 1000, [altitude(pk) for pk in range_dist], 'r')
+ax1.set_xlabel("distance (km)")
+ax1.set_ylabel("vitesse (km/h)")
+ax2.set_ylabel("altitude (m)")
+plt.savefig("vitesse LR-A.png")
+plt.show()
 
 
 
