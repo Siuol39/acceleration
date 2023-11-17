@@ -97,9 +97,18 @@ vehicules = {
             "cx": 0.6,
             "crr": 0.003
             },
+        "Southwest_Chief": {
+            "nom": "Amtrak Southwest Chief",
+            "masse": 1114 * TONNE,
+            "puissance": 0.7 * 6000 * KILO * WATT,
+            "puissance f": -8000 * KILO * WATT,
+            "surface": 3.05 * 4.37,
+            "cx": 0.6,
+            "crr": 0.003
+            },
         }
 
-vehicule = vehicules["flirt_521_523_CFF"]
+vehicule = vehicules["Southwest_Chief"]
 
 
 RHO = 1.2
@@ -264,31 +273,31 @@ def f_integree_decroissant(t, y):
     return [-force_traction(y[0]) / vehicule["masse"] + resistance_pk_decroissant(y[0], y[1]) / vehicule["masse"], y[0]]
 
 t0 = 0
-tmax = 1200
+tmax = 480
 
-# for v in np.linspace(20, 100, 81):
-#     v_ini = v / 3.6
-#     v_cible = 1 / 3.6
-#     sol_frein = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
-#                     t_eval = np.linspace(t0, tmax, 200),
-#                     args = [v_cible, 0/1000],
-#                     events = lambda t, y, v_c, p : y[0] - 1.02 * v_c)
+#for v in np.linspace(50, 160, 111):
+#    v_ini = v / 3.6
+#    v_cible = 1 / 3.6
+#    sol_frein = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
+#                    t_eval = np.linspace(t0, tmax, 200),
+#                    args = [v_cible, 0/1000],
+#                    events = lambda t, y, v_c, p : y[0] - 1.02 * v_c)
+#   
+#    print("{0:0.0f}".format(v_ini * 3.6),
+#          "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
+#          "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
     
-#     print("{0:0.0f}".format(v_ini * 3.6),
-#           "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
-#           "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
-    
-# for v in np.linspace(20, 70, 51):
-#     v_ini = 1e-3
-#     v_cible = v / 3.6
-#     sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
-#                     t_eval = np.linspace(t0, tmax, 200),
-#                     args = [v_cible, 0/1000],
-#                     events = lambda t, y, v_c, p : y[0] - 0.98 * v_c)
-    
-#     print("{0:0.0f}".format(v_cible * 3.6),
-#           "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
-#           "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
+for v in np.linspace(50, 160, 111):
+    v_ini = 1e-3
+    v_cible = v / 3.6
+    sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
+                    t_eval = np.linspace(t0, tmax, 200),
+                    args = [v_cible, 0/1000],
+                    events = lambda t, y, v_c, p : y[0] - 0.98 * v_c)
+   
+    print("{0:0.0f}".format(v_cible * 3.6),
+          "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
+          "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
 
 # sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
 #                 t_eval = np.linspace(t0, tmax, 200),
@@ -325,20 +334,20 @@ range_dist = np.linspace(0, 45000, 100)
 # plt.savefig("vitesse A-LR.png")
 # plt.show()
 
-sol = solve_ivp(f_integree_decroissant, [t0, tmax], [-VITESSE_INI, 42030],
-                t_eval = np.linspace(t0, tmax, 100))
-    
-fig = plt.figure(2, dpi=300)
-plt.title("Vitesse du train (retour)")
-ax1 = plt.gca()
-ax2 = ax1.twinx()
-ax1.plot(sol.y[1] / 1000, -3.6 * sol.y[0])
-ax2.plot(range_dist / 1000, [altitude(pk) for pk in range_dist], 'r')
-ax1.set_xlabel("distance (km)")
-ax1.set_ylabel("vitesse (km/h)")
-ax2.set_ylabel("altitude (m)")
-plt.savefig("vitesse LR-A.png")
-plt.show()
+#sol = solve_ivp(f_integree_decroissant, [t0, tmax], [-VITESSE_INI, 42030],
+#                t_eval = np.linspace(t0, tmax, 100))
+#    
+#fig = plt.figure(2, dpi=300)
+#plt.title("Vitesse du train (retour)")
+#ax1 = plt.gca()
+#ax2 = ax1.twinx()
+#ax1.plot(sol.y[1] / 1000, -3.6 * sol.y[0])
+#ax2.plot(range_dist / 1000, [altitude(pk) for pk in range_dist], 'r')
+#ax1.set_xlabel("distance (km)")
+#ax1.set_ylabel("vitesse (km/h)")
+#ax2.set_ylabel("altitude (m)")
+#plt.savefig("vitesse LR-A.png")
+#plt.show()
 
 
 
