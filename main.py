@@ -89,8 +89,8 @@ vehicules = {
             "crr": 0.003
             },
         "fretBB27000": {
-            "nom": "Fret 2000 t BB 27000",
-            "masse": 2050 * TONNE,
+            "nom": "Fret 1000 t BB 27000",
+            "masse": 1000 * TONNE,
             "puissance": 0.7 * 4200 * KILO * WATT,
             "puissance f": -5000 * KILO * WATT,
             "surface": 2.93 * 4.27,
@@ -106,19 +106,28 @@ vehicules = {
             "cx": 0.6,
             "crr": 0.003
             },
+        "TGV": {
+            "nom": "TGV",
+            "masse": 443 * TONNE,
+            "puissance": 0.7 * 9280 * KILO * WATT,
+            "puissance f": -10000 * KILO * WATT,
+            "surface": 2.904 * 4.37,
+            "cx": 0.5,
+            "crr": 0.003
+            },
         }
 
-vehicule = vehicules["Southwest_Chief"]
+vehicule = vehicules["fretBB27000"]
 
 
 RHO = 1.2
 
 ALPHA = 0.5 * RHO * vehicule["surface"] * vehicule["cx"]
 
-VITESSE_INI = 160/3.6
-VITESSE_CIBLE = 160/3.6
+VITESSE_INI = 1e-3/3.6
+VITESSE_CIBLE = 300/3.6
 ECART = 1/3.6
-PENTE = 5.35/1000
+PENTE = 5/1000
 
 # DATA = pd.read_csv("profil autoroute La Roche Annecy.csv", sep=";", header=0, decimal=",")
 DATA = pd.read_csv("A48 Bourgouin-Voreppe.csv", sep=";", header=0, decimal=",")
@@ -273,7 +282,7 @@ def f_integree_decroissant(t, y):
     return [-force_traction(y[0]) / vehicule["masse"] + resistance_pk_decroissant(y[0], y[1]) / vehicule["masse"], y[0]]
 
 t0 = 0
-tmax = 480
+tmax = 600
 
 #for v in np.linspace(50, 160, 111):
 #    v_ini = v / 3.6
@@ -287,7 +296,7 @@ tmax = 480
 #          "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
 #          "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
     
-for v in np.linspace(50, 160, 111):
+for v in np.linspace(50, 120, 71):
     v_ini = 1e-3
     v_cible = v / 3.6
     sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
@@ -299,24 +308,24 @@ for v in np.linspace(50, 160, 111):
           "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
           "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
 
-# sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
-#                 t_eval = np.linspace(t0, tmax, 200),
-#                 args = [VITESSE_CIBLE, PENTE],
-#                 events = [lambda t, y, v_c, p : y[0] - 50/3.6])
-
-# fig = plt.figure(0, dpi=80)
-# plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
-# ax = plt.gca()
-# ax.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
-# ax.set_xlabel("distance (km)")
-# ax.set_ylabel("vitesse (km/h)")
-# # plt.savefig(".png")
-# plt.show()
-
-# print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
-# print(sol.y_events[0][0][0] / sol.t_events[0][0])
-
-range_dist = np.linspace(0, 45000, 100)    
+#sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
+#                t_eval = np.linspace(t0, tmax, 200),
+#                args = [VITESSE_CIBLE, PENTE],
+#                events = [lambda t, y, v_c, p : y[0] - 50/3.6])
+#
+#fig = plt.figure(0, dpi=80)
+#plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
+#ax = plt.gca()
+#ax.plot(sol.t, 3.6 * sol.y[0])
+#ax.set_xlabel("temps (s)")
+#ax.set_ylabel("vitesse (km/h)")
+## plt.savefig(".png")
+#plt.show()
+#
+#print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
+#print(sol.y_events[0][0][0] / sol.t_events[0][0])
+#
+#range_dist = np.linspace(0, 45000, 100)    
 
 
 # sol = solve_ivp(f_integree_croissant, [t0, tmax], [VITESSE_INI, 0],
