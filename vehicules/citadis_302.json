@@ -1,0 +1,12 @@
+{
+    "nom": "Alstom Citadis 302",
+    "masse_vide": 38,
+    "charge_utile": 16,
+    "puissance": 688,
+    "force_traction": 80,
+    "hauteur": 3,
+    "largeur": 2.4,
+    "cx": 0.6,
+    "crr": 0.003,
+    "deceleration": 1.3
+}
