@@ -11,9 +11,13 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from math import sin, pi
 
+import ligne
+import vehicule
+
 KILO = 1000
 TONNE = 1000
 WATT = 1
+NEWTON = 1
 
 vehicules = {
         "citadis": {
@@ -94,6 +98,7 @@ vehicules = {
             "puissance": 0.7 * 4200 * KILO * WATT,
             "puissance f": -5000 * KILO * WATT,
             "surface": 2.93 * 4.27,
+            "traction": 0.7 * 320 * KILO * NEWTON,
             "cx": 0.6,
             "crr": 0.003
             },
@@ -117,17 +122,17 @@ vehicules = {
             },
         }
 
-vehicule = vehicules["fretBB27000"]
+veh = vehicules["fretBB27000"]
 
 
 RHO = 1.2
 
-ALPHA = 0.5 * RHO * vehicule["surface"] * vehicule["cx"]
+ALPHA = 0.5 * RHO * veh["surface"] * veh["cx"]
 
-VITESSE_INI = 1e-3/3.6
+VITESSE_INI = 12.2/3.6
 VITESSE_CIBLE = 300/3.6
 ECART = 1/3.6
-PENTE = 5/1000
+PENTE = 7.9/1000
 
 # DATA = pd.read_csv("profil autoroute La Roche Annecy.csv", sep=";", header=0, decimal=",")
 DATA = pd.read_csv("A48 Bourgouin-Voreppe.csv", sep=";", header=0, decimal=",")
@@ -226,8 +231,8 @@ def resistance(vitesse, pente):
     """
     v = vitesse
     R_aero = ALPHA * v ** 2
-    R_elevation = pente * vehicule["masse"] * 9.81 # m * g * v verticale / v
-    R_roulement = vehicule["crr"] * vehicule["masse"] * 9.81
+    R_elevation = pente * veh["masse"] * 9.81 # m * g * v verticale / v
+    R_roulement = veh["crr"] * veh["masse"] * 9.81
     
     return R_aero + R_elevation + R_roulement
 
@@ -261,25 +266,25 @@ def force_traction(vitesse, vitesse_cible = VITESSE_CIBLE):
     """
     vitesse = abs(vitesse)
     if vitesse <= vitesse_cible - ECART:
-        p = vehicule["puissance"]
+        p = veh["puissance"]
     elif vitesse <= vitesse_cible:
         #p = PUISSANCE * sin(pi / 2 * (vitesse - VITESSE_CIBLE) / ECART - pi)
-        p = (vitesse_cible - vitesse) * vehicule["puissance"] / ECART
+        p = (vitesse_cible - vitesse) * veh["puissance"] / ECART
     elif vitesse < vitesse_cible + ECART:
         #p = PUISSANCE_FREINAGE * sin(pi / 2 * (vitesse - VITESSE_CIBLE) / ECART)
-         p = (vitesse - vitesse_cible) * vehicule["puissance f"] / ECART
+         p = (vitesse - vitesse_cible) * veh["puissance f"] / ECART
     else:
-        p = vehicule["puissance f"]
-    return p / vitesse
+        p = veh["puissance f"]
+    return min(p / vitesse, veh["traction"])
 
 def f_integree_pente(t, y, v_cible, pente):
-    return [force_traction(y[0], v_cible) / vehicule["masse"] - resistance(y[0], pente) / vehicule["masse"], y[0]]
+    return [force_traction(y[0], v_cible) / veh["masse"] - resistance(y[0], pente) / veh["masse"], y[0]]
 
 def f_integree_croissant(t, y):
-    return [force_traction(y[0]) / vehicule["masse"] - resistance_pk_croissant(y[0], y[1]) / vehicule["masse"], y[0]]
+    return [force_traction(y[0]) / veh["masse"] - resistance_pk_croissant(y[0], y[1]) / veh["masse"], y[0]]
 
 def f_integree_decroissant(t, y):
-    return [-force_traction(y[0]) / vehicule["masse"] + resistance_pk_decroissant(y[0], y[1]) / vehicule["masse"], y[0]]
+    return [-force_traction(y[0]) / veh["masse"] + resistance_pk_decroissant(y[0], y[1]) / veh["masse"], y[0]]
 
 t0 = 0
 tmax = 600
@@ -296,34 +301,36 @@ tmax = 600
 #          "{0:0.5f}".format(sol_frein.y_events[0][0][1]).replace('.', ","),
 #          "{0:0.5f}".format(sol_frein.t_events[0][0]).replace('.', ","))
     
-for v in np.linspace(50, 120, 71):
-    v_ini = 1e-3
-    v_cible = v / 3.6
-    sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
-                    t_eval = np.linspace(t0, tmax, 200),
-                    args = [v_cible, 0/1000],
-                    events = lambda t, y, v_c, p : y[0] - 0.98 * v_c)
-   
-    print("{0:0.0f}".format(v_cible * 3.6),
-          "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
-          "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
+#for v in np.linspace(50, 120, 71):
+#    v_ini = 1e-3
+#    v_cible = v / 3.6
+#    sol_acc = solve_ivp(f_integree_pente, [t0, tmax], [v_ini, 0],
+#                    t_eval = np.linspace(t0, tmax, 200),
+#                    args = [v_cible, 0/1000],
+#                    events = lambda t, y, v_c, p : y[0] - 0.98 * v_c)
+#   
+#    print("{0:0.0f}".format(v_cible * 3.6),
+#          "{0:0.5f}".format(sol_acc.y_events[0][0][1]).replace('.', ","),
+#          "{0:0.5f}".format(sol_acc.t_events[0][0]).replace('.', ","))
 
-#sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
-#                t_eval = np.linspace(t0, tmax, 200),
-#                args = [VITESSE_CIBLE, PENTE],
-#                events = [lambda t, y, v_c, p : y[0] - 50/3.6])
-#
-#fig = plt.figure(0, dpi=80)
-#plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(vehicule["nom"], 1000 * PENTE))
-#ax = plt.gca()
-#ax.plot(sol.t, 3.6 * sol.y[0])
-#ax.set_xlabel("temps (s)")
-#ax.set_ylabel("vitesse (km/h)")
-## plt.savefig(".png")
-#plt.show()
-#
-#print(sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
-#print(sol.y_events[0][0][0] / sol.t_events[0][0])
+sol = solve_ivp(f_integree_pente, [t0, tmax], [VITESSE_INI, 0],
+                t_eval = np.linspace(t0, tmax, 200),
+                args = [VITESSE_CIBLE, PENTE],
+                events = [lambda t, y, v_c, p : y[1] - 1390,
+                          lambda t, y, v_c, p : y[0] - 60/3.6])
+
+fig = plt.figure(0, dpi=80)
+plt.title("Vitesse du {0} (pente {1:0.0f} mm/m)".format(veh["nom"], 1000 * PENTE))
+ax = plt.gca()
+ax.plot(sol.t, 3.6 * sol.y[0])
+ax.set_xlabel("temps (s)")
+ax.set_ylabel("vitesse (km/h)")
+# plt.savefig(".png")
+plt.show()
+
+print(3.6 * sol.y_events[0][0][0], sol.y_events[0][0][1], sol.t_events[0][0])
+print(3.6 * sol.y_events[1][0][0], sol.y_events[1][0][1], sol.t_events[1][0])
+
 #
 #range_dist = np.linspace(0, 45000, 100)    
 
@@ -359,8 +366,20 @@ for v in np.linspace(50, 120, 71):
 #plt.show()
 
 
-
-
+#citadis = vehicule.Vehicule("vehicules/citadis_302.json")
+#tram_a = ligne.Ligne("profils/TRAM-Le_Havre_ligne_B.json")
+#
+#sol = tram_a.profil_vitesse_acceleration(citadis, 0, 0, True)
+#
+#
+#fig = plt.figure(1, dpi=300)
+#plt.title("Vitesse")
+#ax1 = plt.gca()
+#ax1.plot(sol.y[1] / 1000, 3.6 * sol.y[0])
+#ax1.set_xlabel("distance (km)")
+#ax1.set_ylabel("vitesse (km/h)")
+##plt.savefig("vitesse A-LR.png")
+#plt.show()
 
 
 
