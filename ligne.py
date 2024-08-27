@@ -98,14 +98,51 @@ class Ligne:
 
 
     def acceleration(self, vehicule, pk, vitesse, croissant):
+        """
+        Calcule l'accélération maximale du véhicule au point donné, à la vitesse donnée.
+
+        Parameters
+        ----------
+        vehicule : Vehicule
+            Véhicule utilisé.
+        pk : float
+            PK en km.
+        vitesse : float
+            Vitesse en m/s.
+        croissant : bool
+            Vrai si la ligne est parcourue dans le sens des PK croissants.
+        
+        Returns
+        -------
+        float
+            Accélération en m/s².
+        
+        """
         return (vehicule.force_traction(vitesse) \
             - vehicule.resistance(vitesse, self.pente(pk, croissant))) \
             / vehicule.masse()
     
     def deceleration(self, vehicule, pk, croissant):
+        """
+        Calcule la décélération maximale du véhicule au point donné.
+
+                Parameters
+        ----------
+        vehicule : Vehicule
+            Véhicule utilisé.
+        pk : float
+            PK en km.
+        croissant : bool
+            Vrai si la ligne est parcourue dans le sens des PK croissants.
+        
+        Returns
+        -------
+        float
+            Décélération en m/s².
+        """
         return vehicule.deceleration + self._g * self.pente(pk, croissant)
     
-    def profil_vitesse_acceleration(self, vehicule, pk_ini, v_ini, croissant):
+    def profil_vitesse_acceleration(self, vehicule, pk_ini: float, v_ini: float, croissant: bool):
         if croissant:
             sgn = 1
         else:
@@ -118,7 +155,9 @@ class Ligne:
         t0 = 0
         tmax = 10000
         sol = solve_ivp(f_integree, [t0, tmax], [v_ini, pk_ini],
-                    t_eval = np.linspace(t0, tmax, 200))
+                    t_eval = np.linspace(t0, tmax, 200),
+                    events = [lambda t, y: round(y[1], 4) - round(y[1], 3),
+                              lambda t, y: y[1] - 5000])
         
         return sol
 
